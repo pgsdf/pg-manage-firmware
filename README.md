@@ -17,9 +17,9 @@ A PGSD / GhostBSD / FreeBSD utility to optimize firmware installation by removin
 
 1. Download the script:
 ```bash
-curl -O https://example.com/pg-manage-firmware
+curl -O https://github.com/pgsdf/pg-manage-firmware
 # or
-wget https://example.com/pg-manage-firmware
+wget https://github.com/pgsdf/pg-manage-firmware
 ```
 
 2. Make it executable:
