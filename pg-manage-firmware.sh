@@ -11,8 +11,10 @@
 #   - gpu-firmware-amd-kmod-*
 #   - gpu-firmware-radeon-*
 #   - wifi-firmware-*
+#   - malo-firmware-kmod
 #   - intel-firmware*
 #   - bluetooth-firmware*, broadcom-firmware*
+#   - rtlbt-firmware
 #
 # Copyright (c) 2025 Pacific Grove Software Distribution Foundation
 # Author: Vester (Vic) Thacker
@@ -47,7 +49,7 @@ umask 022
 # Configuration
 readonly VERSION="1.0.0"
 readonly SCRIPT_NAME="$(basename "$0")"
-readonly FIRMWARE_PATTERNS='gpu-firmware-amd-kmod-|gpu-firmware-radeon-|wifi-firmware-|intel-firmware|b(luetooth|roadcom)-firmware'
+readonly FIRMWARE_PATTERNS='gpu-firmware-amd-kmod-|gpu-firmware-radeon-|wifi-firmware-|malo-firmware-kmod|intel-firmware|b(luetooth|roadcom)-firmware|rtlbt-firmware'
 readonly BACKUP_DIR="/var/tmp"
 readonly LOG_FILE="${LOG_FILE:-/var/log/pg-manage-firmware.log}"
 
@@ -120,7 +122,8 @@ OPERATION:
 
 MANAGED FAMILIES:
   gpu-firmware-amd-kmod-*, gpu-firmware-radeon-*, wifi-firmware-*,
-  intel-firmware*, bluetooth-firmware*, broadcom-firmware*
+  malo-firmware-kmod, intel-firmware*, bluetooth-firmware*,
+  broadcom-firmware*, rtlbt-firmware
 
 EXAMPLES:
   $SCRIPT_NAME --dry-run         # Preview changes without modification
@@ -259,8 +262,8 @@ get_needed_firmware() {
     # Extract package names from fwget output
     # Expected format: lines starting with whitespace followed by +/- and package name
     echo "$output" | \
-        grep -E '^\s*[-+]\s+' 2>/dev/null | \
-        sed -E 's/^\s*[-+]\s+//' | \
+        grep -E '^[[:space:]]*[-+][[:space:]]+' 2>/dev/null | \
+        sed -E 's/^[[:space:]]*[-+][[:space:]]+//' | \
         awk '{print $1}' | \
         grep -v '^$' | \
         sort -u || true
