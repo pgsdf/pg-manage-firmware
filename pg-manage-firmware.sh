@@ -8,13 +8,13 @@
 #   3. Reinstall only hardware-required firmware via fwget
 #
 # Managed firmware families:
-#   - gpu-firmware-amd-kmod-*
-#   - gpu-firmware-radeon-*
-#   - wifi-firmware-*
-#   - malo-firmware-kmod
+#   - gpu-firmware-amd-kmod-*, gpu-firmware-intel-kmod-*, gpu-firmware-radeon-kmod-*
+#   - gpu-firmware-kmod (generic GPU firmware)
+#   - wifi-firmware-* (all WiFi firmware)
+#   - bwi-firmware-kmod, bwn-firmware-kmod (Broadcom WiFi)
+#   - malo-firmware-kmod (Marvell WiFi)
 #   - intel-firmware*
-#   - bluetooth-firmware*, broadcom-firmware*
-#   - rtlbt-firmware
+#   - bluetooth-firmware*, broadcom-firmware*, rtlbt-firmware
 #
 # Copyright (c) 2025 Pacific Grove Software Distribution Foundation
 # Author: Vester (Vic) Thacker
@@ -49,7 +49,7 @@ umask 022
 # Configuration
 readonly VERSION="1.0.0"
 readonly SCRIPT_NAME="$(basename "$0")"
-readonly FIRMWARE_PATTERNS='gpu-firmware-amd-kmod-|gpu-firmware-radeon-|wifi-firmware-|malo-firmware-kmod|intel-firmware|b(luetooth|roadcom)-firmware|rtlbt-firmware'
+readonly FIRMWARE_PATTERNS='gpu-firmware-(amd|intel|radeon)-kmod|gpu-firmware-kmod|wifi-firmware-|bw[in]-firmware-kmod|malo-firmware-kmod|intel-firmware|b(luetooth|roadcom)-firmware|rtlbt-firmware'
 readonly BACKUP_DIR="/var/tmp"
 readonly LOG_FILE="${LOG_FILE:-/var/log/pg-manage-firmware.log}"
 
@@ -121,9 +121,9 @@ OPERATION:
     7. Verify installation success
 
 MANAGED FAMILIES:
-  gpu-firmware-amd-kmod-*, gpu-firmware-radeon-*, wifi-firmware-*,
-  malo-firmware-kmod, intel-firmware*, bluetooth-firmware*,
-  broadcom-firmware*, rtlbt-firmware
+  gpu-firmware-*-kmod-* (AMD, Intel, Radeon), wifi-firmware-*,
+  bwi-firmware-kmod, bwn-firmware-kmod, malo-firmware-kmod,
+  intel-firmware*, bluetooth-firmware*, broadcom-firmware*, rtlbt-firmware
 
 EXAMPLES:
   $SCRIPT_NAME --dry-run         # Preview changes without modification
@@ -220,12 +220,14 @@ list_installed_firmware() {
     
     verbose "Querying installed firmware packages..."
     
-    result="$(pkg query -e "%n ~ /^($FIRMWARE_PATTERNS)/" '%n' 2>&1)" || exit_code=$?
+    # Use -x flag for regex matching (not -e which doesn't work as expected)
+    result="$(pkg query -x '%n' "^($FIRMWARE_PATTERNS)" 2>&1)" || exit_code=$?
     
     if [ "${exit_code:-0}" -ne 0 ]; then
         # Check if it's just "no packages match" which is fine
+        # pkg query -x returns non-zero when no packages match, which is valid
         case "$result" in
-            *"no packages"*|*"No packages"*)
+            *"no packages"*|*"No packages"*|"")
                 verbose "No matching firmware packages found"
                 return 0
                 ;;
